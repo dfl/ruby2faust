@@ -102,10 +102,6 @@ module Ruby2Faust
       DSP.new(Node.new(type: NodeType::NEG, inputs: [node]))
     end
     alias -@ neg
-
-    def channels
-      node.channels
-    end
   end
 
   # DSL module with comprehensive Faust library primitives.
@@ -613,18 +609,21 @@ module Ruby2Faust
 
     def hgroup(name, content = nil, &block)
       content = block.call if block_given?
+      raise ArgumentError, "hgroup requires content or a block" if content.nil?
       content = to_dsp(content)
       DSP.new(Node.new(type: NodeType::HGROUP, args: [name], inputs: [content.node], channels: content.node.channels))
     end
 
     def vgroup(name, content = nil, &block)
       content = block.call if block_given?
+      raise ArgumentError, "vgroup requires content or a block" if content.nil?
       content = to_dsp(content)
       DSP.new(Node.new(type: NodeType::VGROUP, args: [name], inputs: [content.node], channels: content.node.channels))
     end
 
     def tgroup(name, content = nil, &block)
       content = block.call if block_given?
+      raise ArgumentError, "tgroup requires content or a block" if content.nil?
       content = to_dsp(content)
       DSP.new(Node.new(type: NodeType::TGROUP, args: [name], inputs: [content.node], channels: content.node.channels))
     end
