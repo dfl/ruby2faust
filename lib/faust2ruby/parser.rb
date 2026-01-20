@@ -220,6 +220,11 @@ module Faust2Ruby
 
     def parse_unary
       if current_type == :SUB
+        # Check if this is a prefix operator form: - (x) vs unary negation -x
+        # If followed by LPAREN, it's a prefix operator (subtract from input)
+        if peek&.type == :LPAREN
+          return parse_postfix  # Will handle as prefix operator in parse_primary
+        end
         token = advance
         operand = parse_unary
         return AST::UnaryOp.new(:NEG, operand, line: token.line, column: token.column)

@@ -142,7 +142,7 @@ module Faust2Ruby
         generate_letrec(node)
 
       else
-        "literal(\"/* unknown: #{node.class} */\")"
+        make_literal("/* unknown: #{node.class} */")
       end
     end
 
@@ -183,8 +183,30 @@ module Faust2Ruby
       if stmt.params.empty?
         "#{stmt.name} = #{generate_expression(stmt.expression)}"
       else
-        params_str = stmt.params.join(", ")
+        # Downcase parameter names (Ruby doesn't allow constants as formal args)
+        params_str = stmt.params.map { |p| ruby_safe_param(p) }.join(", ")
         "def #{stmt.name}(#{params_str})\n  #{generate_expression(stmt.expression)}\nend"
+      end
+    end
+
+    # Convert parameter name to Ruby-safe lowercase
+    def ruby_safe_param(name)
+      # Downcase if it starts with uppercase (would be a constant)
+      name[0] =~ /[A-Z]/ ? name.downcase : name
+    end
+
+    # Generate a literal() call with properly escaped content
+    def make_literal(content)
+      "literal(#{content.inspect})"
+    end
+
+    # Extract Faust code from a Ruby expression for embedding in literals
+    # e.g., 'literal("foo")' -> 'foo', 'x' -> 'x'
+    def to_faust(ruby_expr)
+      if ruby_expr =~ /\Aliteral\(["'](.*)["']\)\z/
+        $1.gsub(/\\"/, '"')  # Unescape quotes
+      else
+        ruby_expr
       end
     end
 
@@ -255,29 +277,29 @@ module Faust2Ruby
       when :DIV
         "(#{left} / #{right})"
       when :MOD
-        "literal(\"(#{left} % #{right})\")"
+        make_literal("(#{to_faust(left)} % #{to_faust(right)})")
       when :POW
         "pow(#{left}, #{right})"
       when :DELAY
         "delay(#{left}, #{right})"
       when :AND
-        "literal(\"(#{left} & #{right})\")"
+        make_literal("(#{to_faust(left)} & #{to_faust(right)})")
       when :OR
-        "literal(\"(#{left} | #{right})\")"
+        make_literal("(#{to_faust(left)} | #{to_faust(right)})")
       when :LT
-        "literal(\"(#{left} < #{right})\")"
+        make_literal("(#{to_faust(left)} < #{to_faust(right)})")
       when :GT
-        "literal(\"(#{left} > #{right})\")"
+        make_literal("(#{to_faust(left)} > #{to_faust(right)})")
       when :LE
-        "literal(\"(#{left} <= #{right})\")"
+        make_literal("(#{to_faust(left)} <= #{to_faust(right)})")
       when :GE
-        "literal(\"(#{left} >= #{right})\")"
+        make_literal("(#{to_faust(left)} >= #{to_faust(right)})")
       when :EQ
-        "literal(\"(#{left} == #{right})\")"
+        make_literal("(#{to_faust(left)} == #{to_faust(right)})")
       when :NEQ
-        "literal(\"(#{left} != #{right})\")"
+        make_literal("(#{to_faust(left)} != #{to_faust(right)})")
       else
-        "literal(\"(#{left} #{node.op} #{right})\")"
+        make_literal("(#{to_faust(left)} #{node.op} #{to_faust(right)})")
       end
     end
 
@@ -288,7 +310,7 @@ module Faust2Ruby
       when :NEG
         "(-#{operand})"
       else
-        "literal(\"#{node.op}(#{operand})\")"
+        make_literal("#{node.op}(#{to_faust(operand)})")
       end
     end
 
@@ -306,11 +328,13 @@ module Faust2Ruby
           return "(#{args.join(' * ')})"
         end
       when "+"
-        return args.length == 1 ? args[0] : "(#{args.join(' + ')})"
+        # +(x) is a signal processor: input + x
+        return args.length == 1 ? "(wire + #{args[0]})" : "(#{args.join(' + ')})"
       when "-"
-        return args.length == 1 ? "(-#{args[0]})" : "(#{args.join(' - ')})"
+        # -(x) is a signal processor: input - x
+        return args.length == 1 ? "(wire - #{args[0]})" : "(#{args.join(' - ')})"
       when "/"
-        return args.length == 1 ? "literal(\"/(#{args[0]})\")" : "(#{args.join(' / ')})"
+        return args.length == 1 ? make_literal("/(#{to_faust(args[0])})") : "(#{args.join(' / ')})"
       end
 
       # Check library mapping
@@ -318,8 +342,9 @@ module Faust2Ruby
       if mapping
         generate_mapped_call(mapping, args, name)
       else
-        # Unknown function - emit as literal
-        "literal(\"#{name}(#{args.join(', ')})\")"
+        # Unknown function - emit as literal with Faust code
+        faust_args = args.map { |a| to_faust(a) }.join(", ")
+        make_literal("#{name}(#{faust_args})")
       end
     end
 
@@ -459,7 +484,7 @@ module Faust2Ruby
     def generate_access(node)
       operand = generate_expression(node.operand)
       index = generate_expression(node.index)
-      "literal(\"#{operand}[#{index}]\")"
+      make_literal("#{to_faust(operand)}[#{to_faust(index)}]")
     end
 
     def generate_with(node)
@@ -471,10 +496,10 @@ module Faust2Ruby
     def generate_letrec(node)
       # Letrec is complex - generate as literal for now
       defs = node.definitions.map do |d|
-        "#{d.name} = #{generate_expression(d.expression)}"
+        "#{d.name} = #{to_faust(generate_expression(d.expression))}"
       end.join("; ")
-      expr = node.expression ? generate_expression(node.expression) : "wire"
-      "literal(\"letrec { #{defs} } #{expr}\")"
+      expr = node.expression ? to_faust(generate_expression(node.expression)) : "_"
+      make_literal("letrec { #{defs} } #{expr}")
     end
   end
 end
