@@ -293,16 +293,85 @@ adaa = flambda(:x0, :x1) { |x0, x1| select2(...) }
 
 ## Partial Application
 
-Faust's partial application (e.g., `min(1)`) is converted to lambdas:
+Faust's partial application creates reusable signal processors by providing some arguments upfront.
+
+### Clipping / Limiting
 
 **Input (Faust):**
 ```faust
+// Clip signal to [-1, 1] range
 safetyLimit = min(1) : max(-1);
+process = osc(440) : safetyLimit;
 ```
 
 **Output (Ruby):**
 ```ruby
 safetyLimit = (flambda(:x) { |x| min_(x, 1) } >> flambda(:x) { |x| max_(x, (-1)) })
+process = (osc(440) >> safetyLimit)
+```
+
+### Conditional Routing
+
+**Input (Faust):**
+```faust
+// Switch between two signals based on condition
+useWet = checkbox("wet");
+effect = _ <: _, reverb : select2(useWet);
+```
+
+**Output (Ruby):**
+```ruby
+useWet = checkbox("wet")
+effect = wire.split(wire, reverb) >> flambda(:x, :y) { |x, y| select2(useWet, x, y) }
+```
+
+### Gain Stages
+
+**Input (Faust):**
+```faust
+// Partial application of multiplication
+halfGain = *(0.5);
+quarterGain = *(0.25);
+process = osc(440) : halfGain;
+```
+
+**Output (Ruby):**
+```ruby
+halfGain = gain(0.5)
+quarterGain = gain(0.25)
+process = (osc(440) >> halfGain)
+```
+
+### Filter Configuration
+
+**Input (Faust):**
+```faust
+// Second-order lowpass waiting for cutoff frequency
+smoothFilter = fi.lowpass(2);
+process = _ : smoothFilter(1000);
+```
+
+**Output (Ruby):**
+```ruby
+smoothFilter = flambda(:x) { |x| lp(x, order: 2) }
+process = (wire >> smoothFilter.call(1000))  # Note: needs .call in Ruby
+```
+
+### Math Functions as Processors
+
+**Input (Faust):**
+```faust
+// 0-arg functions applied to signals
+softclip(x) = tanh(x);
+process = osc(440) * 2 : softclip;
+```
+
+**Output (Ruby):**
+```ruby
+def softclip(x)
+  (x >> tanh_)
+end
+process = ((osc(440) * 2) >> softclip(wire))
 ```
 
 ## What Uses `literal()`
@@ -311,23 +380,56 @@ Some Faust constructs are emitted as `literal()` calls to preserve semantics:
 
 | Construct | Example | Reason |
 |-----------|---------|--------|
-| Unmapped library functions | `fi.svf.bp(f, q)` | Not in library mapper |
 | Letrec blocks | `letrec { 'x = ... }` | Complex state semantics |
-| Unknown functions | `customFunc(x)` | Not defined in file |
-| Partial app (3+ args) | `route(4, 4, ...)` | Requires complex curry |
+| Unmapped library functions | `an.amp_follower(t)` | Not in library mapper |
+| Partial app (4+ args) | `route(4, 4, ...)` | Requires complex curry |
+
+Most common Faust library functions are mapped, including `fi.*`, `os.*`, `de.*`, `en.*`, `ba.*`, `si.*`, `aa.*`, and math primitives.
 
 ## Limitations
 
 **Supported with limitations:**
-- `with` clauses: Local definitions work, but variables from `with` blocks are scoped to a Ruby lambda
-- `letrec`: Emitted as literals; full recursive state semantics not implemented in DSL
-- Partial application: Works for 2-arg functions (e.g., `min(1)`); more complex cases use literals
+- `with` clauses: Local definitions work, scoped via Ruby lambda
+- Partial application: Works for 1-3 missing arguments
+- Forward references: Functions defined later in `with` blocks are resolved
 
 **Not supported:**
 - Pattern matching and case expressions
 - Foreign functions (`ffunction`)
 - Component/library imports beyond path tracking
-- Recursive signal definitions (beyond what letrec provides)
+
+## Known Issues
+
+### letrec Blocks
+
+`letrec` blocks are emitted as `literal()` calls because they implement complex recursive state semantics that don't have a direct Ruby DSL equivalent.
+
+**Example Faust:**
+```faust
+// Spring-damper physics simulation
+follower(input) = pos letrec {
+    'v = v + step * (-damping * v - stiffness * (pos - input));
+    'pos = pos + step * v;
+};
+```
+
+**Generated Ruby:**
+```ruby
+literal("letrec { 'v = (v + (step * ...)); 'pos = (pos + (step * v)) } pos")
+```
+
+**Why this happens:**
+- `'v` means "next value of v" (sample n+1)
+- `v` means "current value of v" (sample n)
+- This creates mutually recursive signals with feedback
+- Ruby lacks native syntax for this pattern
+
+**Workarounds:**
+1. **Accept the literal** - Round-trip conversion still works; the Faust code is preserved
+2. **Use simple feedback** - For single-variable recursion, use `wire ~ expr` instead
+3. **Refactor in Faust** - Sometimes letrec can be rewritten using standard feedback
+
+**Impact:** In practice, letrec is rare. Complex DSP files like triode.lib (500+ lines) convert with only 1 literal remaining (the letrec block).
 
 ## Architecture
 
