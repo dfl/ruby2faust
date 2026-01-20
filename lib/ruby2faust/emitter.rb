@@ -120,6 +120,31 @@ module Ruby2Faust
         node.inputs.count == 2 ? "(#{emit(node.inputs[0], indent: indent, pretty: pretty)} - #{emit(node.inputs[1], indent: indent, pretty: pretty)})" : "-"
       when NodeType::DIV
         node.inputs.count == 2 ? "(#{emit(node.inputs[0], indent: indent, pretty: pretty)} / #{emit(node.inputs[1], indent: indent, pretty: pretty)})" : "/"
+      when NodeType::MOD
+        "(#{emit(node.inputs[0], indent: indent, pretty: pretty)} % #{emit(node.inputs[1], indent: indent, pretty: pretty)})"
+
+      # Comparison operators
+      when NodeType::LT
+        "(#{emit(node.inputs[0], indent: indent, pretty: pretty)} < #{emit(node.inputs[1], indent: indent, pretty: pretty)})"
+      when NodeType::GT
+        "(#{emit(node.inputs[0], indent: indent, pretty: pretty)} > #{emit(node.inputs[1], indent: indent, pretty: pretty)})"
+      when NodeType::LE
+        "(#{emit(node.inputs[0], indent: indent, pretty: pretty)} <= #{emit(node.inputs[1], indent: indent, pretty: pretty)})"
+      when NodeType::GE
+        "(#{emit(node.inputs[0], indent: indent, pretty: pretty)} >= #{emit(node.inputs[1], indent: indent, pretty: pretty)})"
+      when NodeType::EQ
+        "(#{emit(node.inputs[0], indent: indent, pretty: pretty)} == #{emit(node.inputs[1], indent: indent, pretty: pretty)})"
+      when NodeType::NEQ
+        "(#{emit(node.inputs[0], indent: indent, pretty: pretty)} != #{emit(node.inputs[1], indent: indent, pretty: pretty)})"
+
+      # Bitwise operators
+      when NodeType::BAND
+        "(#{emit(node.inputs[0], indent: indent, pretty: pretty)} & #{emit(node.inputs[1], indent: indent, pretty: pretty)})"
+      when NodeType::BOR
+        "(#{emit(node.inputs[0], indent: indent, pretty: pretty)} | #{emit(node.inputs[1], indent: indent, pretty: pretty)})"
+      when NodeType::XOR
+        "(#{emit(node.inputs[0], indent: indent, pretty: pretty)} xor #{emit(node.inputs[1], indent: indent, pretty: pretty)})"
+
       when NodeType::NEG
         "0 - #{emit(node.inputs[0], indent: indent, pretty: pretty)}"
       when NodeType::ABS

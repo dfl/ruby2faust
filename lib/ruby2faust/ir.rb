@@ -93,6 +93,20 @@ module Ruby2Faust
     RINT = :rint       # round to int
     FMOD = :fmod       # fmod(x, y)
     REMAINDER = :remainder
+    MOD  = :mod        # %
+
+    # === Comparison ===
+    LT  = :lt   # <
+    GT  = :gt   # >
+    LE  = :le   # <=
+    GE  = :ge   # >=
+    EQ  = :eq   # ==
+    NEQ = :neq  # !=
+
+    # === Bitwise ===
+    BAND = :band  # &
+    BOR  = :bor   # | (bitwise, not parallel)
+    XOR  = :xor   # xor
 
     # === Conversion (ba.) ===
     DB2LINEAR = :db2linear  # ba.db2linear

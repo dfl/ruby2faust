@@ -163,7 +163,31 @@ fpar(:i, 4) { |i| osc((i * 100)) }
 | `a - b` | `a - b` |
 | `a * b` | `a * b` |
 | `a / b` | `a / b` |
+| `a % b` | `a % b` |
 | `*(x)` | `gain(x)` |
+
+### Comparison
+
+| Faust | Ruby |
+|-------|------|
+| `a < b` | `a < b` |
+| `a > b` | `a > b` |
+| `a <= b` | `a <= b` |
+| `a >= b` | `a >= b` |
+| `a == b` | `a.eq(b)` |
+| `a != b` | `a.neq(b)` |
+
+Note: `eq()` and `neq()` are methods because Ruby's `==` must return boolean.
+
+### Bitwise
+
+| Faust | Ruby |
+|-------|------|
+| `a & b` | `a & b` |
+| `a \| b` (bitwise) | `a.bor(b)` |
+| `xor(a, b)` | `a ^ b` |
+
+Note: `bor()` is a method because `\|` is used for parallel composition in the DSL.
 
 ### Library Functions
 
@@ -288,10 +312,9 @@ Some Faust constructs are emitted as `literal()` calls to preserve semantics:
 | Construct | Example | Reason |
 |-----------|---------|--------|
 | Unmapped library functions | `fi.svf.bp(f, q)` | Not in library mapper |
-| Comparison operators | `a < b`, `a == b` | No DSL equivalent |
-| Bitwise operators | `a & b`, `a \| b` (bitwise) | Would conflict with DSL |
 | Letrec blocks | `letrec { 'x = ... }` | Complex state semantics |
 | Unknown functions | `customFunc(x)` | Not defined in file |
+| Partial app (3+ args) | `route(4, 4, ...)` | Requires complex curry |
 
 ## Limitations
 

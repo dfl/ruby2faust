@@ -301,27 +301,29 @@ module Faust2Ruby
       when :DIV
         "(#{left} / #{right})"
       when :MOD
-        make_literal("(#{to_faust(left)} % #{to_faust(right)})")
+        "(#{left} % #{right})"
       when :POW
         "pow(#{left}, #{right})"
       when :DELAY
         "delay(#{left}, #{right})"
       when :AND
-        make_literal("(#{to_faust(left)} & #{to_faust(right)})")
+        "(#{left} & #{right})"
       when :OR
-        make_literal("(#{to_faust(left)} | #{to_faust(right)})")
+        # Use bor() method to avoid conflict with parallel composition |
+        "#{left}.bor(#{right})"
       when :LT
-        make_literal("(#{to_faust(left)} < #{to_faust(right)})")
+        "(#{left} < #{right})"
       when :GT
-        make_literal("(#{to_faust(left)} > #{to_faust(right)})")
+        "(#{left} > #{right})"
       when :LE
-        make_literal("(#{to_faust(left)} <= #{to_faust(right)})")
+        "(#{left} <= #{right})"
       when :GE
-        make_literal("(#{to_faust(left)} >= #{to_faust(right)})")
+        "(#{left} >= #{right})"
       when :EQ
-        make_literal("(#{to_faust(left)} == #{to_faust(right)})")
+        # Use eq() method since Ruby's == must return boolean
+        "#{left}.eq(#{right})"
       when :NEQ
-        make_literal("(#{to_faust(left)} != #{to_faust(right)})")
+        "#{left}.neq(#{right})"
       else
         make_literal("(#{to_faust(left)} #{node.op} #{to_faust(right)})")
       end

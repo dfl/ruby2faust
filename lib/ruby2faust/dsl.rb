@@ -102,6 +102,71 @@ module Ruby2Faust
       DSP.new(Node.new(type: NodeType::NEG, inputs: [node]))
     end
     alias -@ neg
+
+    # Modulo (Faust %)
+    # @param other [Numeric, DSP]
+    # @return [DSP]
+    def %(other)
+      other = DSL.to_dsp(other)
+      DSP.new(Node.new(type: NodeType::MOD, inputs: [node, other.node]))
+    end
+
+    # Comparison operators - return DSP nodes for Faust comparisons
+    # Note: These return DSP, not boolean, for signal processing
+
+    # Less than (Faust <)
+    def <(other)
+      other = DSL.to_dsp(other)
+      DSP.new(Node.new(type: NodeType::LT, inputs: [node, other.node]))
+    end
+
+    # Greater than (Faust >)
+    def >(other)
+      other = DSL.to_dsp(other)
+      DSP.new(Node.new(type: NodeType::GT, inputs: [node, other.node]))
+    end
+
+    # Less than or equal (Faust <=)
+    def <=(other)
+      other = DSL.to_dsp(other)
+      DSP.new(Node.new(type: NodeType::LE, inputs: [node, other.node]))
+    end
+
+    # Greater than or equal (Faust >=)
+    def >=(other)
+      other = DSL.to_dsp(other)
+      DSP.new(Node.new(type: NodeType::GE, inputs: [node, other.node]))
+    end
+
+    # Equal (Faust ==) - named method since Ruby == must return boolean
+    def eq(other)
+      other = DSL.to_dsp(other)
+      DSP.new(Node.new(type: NodeType::EQ, inputs: [node, other.node]))
+    end
+
+    # Not equal (Faust !=)
+    def neq(other)
+      other = DSL.to_dsp(other)
+      DSP.new(Node.new(type: NodeType::NEQ, inputs: [node, other.node]))
+    end
+
+    # Bitwise AND (Faust &)
+    def &(other)
+      other = DSL.to_dsp(other)
+      DSP.new(Node.new(type: NodeType::BAND, inputs: [node, other.node]))
+    end
+
+    # Bitwise XOR (Faust xor)
+    def ^(other)
+      other = DSL.to_dsp(other)
+      DSP.new(Node.new(type: NodeType::XOR, inputs: [node, other.node]))
+    end
+
+    # Bitwise OR - use method name to avoid conflict with parallel composition
+    def bor(other)
+      other = DSL.to_dsp(other)
+      DSP.new(Node.new(type: NodeType::BOR, inputs: [node, other.node]))
+    end
   end
 
   # DSL module with comprehensive Faust library primitives.
