@@ -1,0 +1,6 @@
+--title "Ruby2Faust Documentation"
+--markup markdown
+--readme README.md
+lib/**/*.rb
+-
+LICENSE.txt
