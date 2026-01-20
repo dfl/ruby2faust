@@ -32,6 +32,35 @@ import("stdfaust.lib");
 process = ((os.osc(440) : fi.lowpass(1, 800)) : *(0.3));
 ```
 
+## Composition
+
+Ruby2Faust maps Faust's composition operators to Ruby methods and operators:
+
+```ruby
+# Sequential: signal flows through a chain
+osc(440) >> lp(800) >> gain(0.3)       # Faust: osc : lp : gain
+
+# Parallel: signals run side by side
+osc(440) | osc(442)                     # Faust: osc, osc (stereo)
+
+# Split (fan-out): one signal to many
+osc(440).split(gain(0.5), gain(0.3))   # Faust: osc <: gain, gain
+
+# Merge (fan-in): many signals to one
+(osc(440) | noise).merge(add)          # Faust: (osc, noise) :> +
+
+# Feedback: signal loops back
+wire ~ (delay(44100, 22050) >> gain(0.5))  # Faust: _ ~ (delay : gain)
+```
+
+| Faust | Meaning | Method | Operator |
+|-------|---------|--------|----------|
+| `:` | Sequential | `.then(b)` | `>>` |
+| `,` | Parallel | `.par(b)` | `\|` |
+| `<:` | Fan-out | `.split(*bs)` | n/a |
+| `:>` | Fan-in | `.merge(b)` | n/a |
+| `~` | Feedback | `.feedback(b)` | `~` |
+
 ## DSL Reference
 
 ### Oscillators (os.)
@@ -173,31 +202,6 @@ slider("[0]freq[style:knob][unit:Hz]", init: 440, min: 20, max: 2000)
 # Inline comment attached to a node
 saw(freq).doc("Main oscillator")
 
-# Output: /* Main oscillator */ os.sawtooth(freq)
-```
-
-### Composition Operators
-
-| Method | Operator | Faust | Meaning |
-|--------|----------|-------|---------|
-| `.then(b)` | `>>` | `:` | Sequential |
-| `.par(b)` | `\|` | `,` | Parallel |
-| `.split(*bs)` | - | `<:` | Fan-out |
-| `.merge(b)` | - | `:>` | Fan-in |
-| `.feedback(b)` | `~` | `~` | Feedback |
-
-**Examples:**
-```ruby
-# Sequential (signal chain)
-osc(440) >> lp(800) >> gain(0.3)
-
-# Parallel (stereo)
-left = osc(440) >> gain(0.3)
-right = osc(442) >> gain(0.3)
-stereo = left | right
-
-# Feedback (echo)
-echo = wire ~ (delay(44100, 22050) >> gain(0.5))
 ```
 
 ### Constants
