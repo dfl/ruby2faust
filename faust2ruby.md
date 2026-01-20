@@ -241,12 +241,70 @@ process = eval(ruby_code)
 faust_output = Ruby2Faust::Emitter.program(process)
 ```
 
+## With Clauses
+
+`with` clauses are converted to Ruby lambdas for proper scoping:
+
+**Input (Faust):**
+```faust
+myDSP = result with {
+    gain = 0.5;
+    result = _ * gain;
+};
+```
+
+**Output (Ruby):**
+```ruby
+myDSP = -> {
+  gain = 0.5
+  result = (wire * gain)
+  result
+}.call
+```
+
+Function-style local definitions use `flambda`:
+```ruby
+adaa = flambda(:x0, :x1) { |x0, x1| select2(...) }
+```
+
+## Partial Application
+
+Faust's partial application (e.g., `min(1)`) is converted to lambdas:
+
+**Input (Faust):**
+```faust
+safetyLimit = min(1) : max(-1);
+```
+
+**Output (Ruby):**
+```ruby
+safetyLimit = (flambda(:x) { |x| min_(x, 1) } >> flambda(:x) { |x| max_(x, (-1)) })
+```
+
+## What Uses `literal()`
+
+Some Faust constructs are emitted as `literal()` calls to preserve semantics:
+
+| Construct | Example | Reason |
+|-----------|---------|--------|
+| Unmapped library functions | `fi.svf.bp(f, q)` | Not in library mapper |
+| Comparison operators | `a < b`, `a == b` | No DSL equivalent |
+| Bitwise operators | `a & b`, `a \| b` (bitwise) | Would conflict with DSL |
+| Letrec blocks | `letrec { 'x = ... }` | Complex state semantics |
+| Unknown functions | `customFunc(x)` | Not defined in file |
+
 ## Limitations
 
-- Complex `with` and `letrec` constructs are partially supported
-- Some advanced Faust features may be emitted as `literal()` calls
-- Pattern matching and case expressions are not fully supported
-- Environment and library scoping uses simple resolution
+**Supported with limitations:**
+- `with` clauses: Local definitions work, but variables from `with` blocks are scoped to a Ruby lambda
+- `letrec`: Emitted as literals; full recursive state semantics not implemented in DSL
+- Partial application: Works for 2-arg functions (e.g., `min(1)`); more complex cases use literals
+
+**Not supported:**
+- Pattern matching and case expressions
+- Foreign functions (`ffunction`)
+- Component/library imports beyond path tracking
+- Recursive signal definitions (beyond what letrec provides)
 
 ## Architecture
 

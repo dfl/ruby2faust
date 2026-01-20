@@ -92,7 +92,6 @@ module Faust2Ruby
 
       return nil if @scanner.eos?
 
-      start_pos = @scanner.pos
       start_line = @line
       start_col = current_column
 

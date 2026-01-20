@@ -234,6 +234,18 @@ module Faust2Ruby
           else
             name  # Function reference
           end
+        elsif @definitions.key?(name)
+          # User-defined function used as signal processor
+          defn = @definitions[name]
+          if defn.params.length == 1
+            # Single-param function used point-free: call with wire
+            "#{name}(wire)"
+          elsif defn.params.empty?
+            name  # Variable reference
+          else
+            # Multi-param function - needs partial application
+            name
+          end
         else
           name
         end
@@ -353,6 +365,9 @@ module Faust2Ruby
       mapping = LibraryMapper.lookup(name)
       if mapping
         generate_mapped_call(mapping, args, name)
+      elsif @definitions.key?(name)
+        # User-defined function - call directly as Ruby method
+        "#{name}(#{args.join(', ')})"
       else
         # Unknown function - emit as literal with Faust code
         faust_args = args.map { |a| to_faust(a) }.join(", ")
@@ -386,9 +401,14 @@ module Faust2Ruby
         # Standard call - check for partial application
         expected_args = mapping[:args]
         if expected_args.is_a?(Integer) && args.length < expected_args && args.length > 0
-          # Partial application - generate as literal
-          faust_args = args.map { |a| to_faust(a) }.join(", ")
-          make_literal("#{original_name}(#{faust_args})")
+          # Partial application - use flambda for 2-arg functions with 1 arg
+          if expected_args == 2 && args.length == 1
+            "flambda(:x) { |x| #{dsl_method}(x, #{args[0]}) }"
+          else
+            # More complex partial application - use literal
+            faust_args = args.map { |a| to_faust(a) }.join(", ")
+            make_literal("#{original_name}(#{faust_args})")
+          end
         elsif args.empty?
           dsl_method.to_s
         else

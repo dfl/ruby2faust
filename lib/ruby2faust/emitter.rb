@@ -302,12 +302,10 @@ module Ruby2Faust
       when NodeType::LAMBDA
         params, block = node.args
         param_str = params.map(&:to_s).join(", ")
-        # Create a context with param nodes for each parameter
-        context = Object.new
-        context.extend(DSL)
-        param_dsps = params.map { |p| context.param(p) }
+        # Create param DSP nodes for each parameter
+        param_dsps = params.map { |p| DSL.param(p) }
         body = block.call(*param_dsps)
-        body = context.instance_exec { to_dsp(body) }
+        body = DSL.send(:to_dsp, body)
         "\\(#{param_str}).(#{emit(body.node, indent: indent, pretty: pretty)})"
       when NodeType::PARAM
         node.args[0].to_s
