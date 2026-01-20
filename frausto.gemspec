@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.0.0"
 
-  spec.files = Dir.glob("{lib,bin}/**/*") + %w[README.md ruby2faust.md faust2ruby.md LICENSE.txt]
+  spec.files = Dir.glob("{lib,bin}/**/*") + %w[README.md ruby2faust.md faust2ruby.md LICENSE.txt .yardopts]
   spec.bindir = "bin"
   spec.executables = ["ruby2faust", "faust2ruby"]
   spec.require_paths = ["lib"]
