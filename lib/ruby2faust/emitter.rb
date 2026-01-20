@@ -108,15 +108,15 @@ module Ruby2Faust
       when NodeType::GAIN
         "*(#{emit(node.inputs[0])})"
       when NodeType::ADD
-        "+"
+        node.inputs.count == 2 ? "(#{emit(node.inputs[0])} + #{emit(node.inputs[1])})" : "+"
       when NodeType::MUL
-        "*"
+        node.inputs.count == 2 ? "(#{emit(node.inputs[0])} * #{emit(node.inputs[1])})" : "*"
       when NodeType::SUB
-        "-"
+        node.inputs.count == 2 ? "(#{emit(node.inputs[0])} - #{emit(node.inputs[1])})" : "-"
       when NodeType::DIV
-        "/"
+        node.inputs.count == 2 ? "(#{emit(node.inputs[0])} / #{emit(node.inputs[1])})" : "/"
       when NodeType::NEG
-        "0 - _"
+        "0 - #{emit(node.inputs[0])}"
       when NodeType::ABS
         "abs"
       when NodeType::MIN

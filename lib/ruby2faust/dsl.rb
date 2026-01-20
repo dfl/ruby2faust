@@ -57,11 +57,54 @@ module Ruby2Faust
     end
 
     # Multiply / gain (Faust *)
-    # Chains through a gain node
-    # @param other [Numeric, DSP] Gain value or signal
-    # @return [DSP] New DSP with gain applied
+    # @param other [Numeric, DSP, Symbol] 
+    # @return [DSP]
     def *(other)
-      self >> DSL.gain(other)
+      other = DSL.to_dsp(other)
+      DSP.new(Node.new(type: NodeType::MUL, inputs: [node, other.node]))
+    end
+
+    def to_s
+      Emitter.emit(node)
+    end
+
+    def inspect
+      "#<Ruby2Faust::DSP #{to_s}>"
+    end
+
+    # Add / mix signals (Faust +)
+    # @param other [Numeric, DSP, Symbol]
+    # @return [DSP]
+    def +(other)
+      other = DSL.to_dsp(other)
+      DSP.new(Node.new(type: NodeType::ADD, inputs: [node, other.node]))
+    end
+
+    # Subtract signals (Faust -)
+    # @param other [Numeric, DSP, Symbol]
+    # @return [DSP]
+    def -(other)
+      other = DSL.to_dsp(other)
+      DSP.new(Node.new(type: NodeType::SUB, inputs: [node, other.node]))
+    end
+
+    # Divide signals (Faust /)
+    # @param other [Numeric, DSP, Symbol]
+    # @return [DSP]
+    def /(other)
+      other = DSL.to_dsp(other)
+      DSP.new(Node.new(type: NodeType::DIV, inputs: [node, other.node]))
+    end
+
+    # Negative of signal (Faust 0 - x)
+    # @return [DSP]
+    def neg
+      DSP.new(Node.new(type: NodeType::NEG, inputs: [node]))
+    end
+    alias -@ neg
+
+    def channels
+      node.channels
     end
   end
 
@@ -94,22 +137,22 @@ module Ruby2Faust
     # OSCILLATORS (os.)
     # =========================================================================
 
-    def osc(freq)
+    def osc(freq = wire)
       freq = to_dsp(freq)
       DSP.new(Node.new(type: NodeType::OSC, inputs: [freq.node]))
     end
 
-    def saw(freq)
+    def saw(freq = wire)
       freq = to_dsp(freq)
       DSP.new(Node.new(type: NodeType::SAW, inputs: [freq.node]))
     end
 
-    def square(freq)
+    def square(freq = wire)
       freq = to_dsp(freq)
       DSP.new(Node.new(type: NodeType::SQUARE, inputs: [freq.node]))
     end
 
-    def triangle(freq)
+    def triangle(freq = wire)
       freq = to_dsp(freq)
       DSP.new(Node.new(type: NodeType::TRIANGLE, inputs: [freq.node]))
     end
@@ -135,7 +178,7 @@ module Ruby2Faust
       DSP.new(Node.new(type: NodeType::LF_SQUARE, inputs: [freq.node]))
     end
 
-    def imptrain(freq)
+    def imptrain(freq = wire)
       freq = to_dsp(freq)
       DSP.new(Node.new(type: NodeType::IMPTRAIN, inputs: [freq.node]))
     end
@@ -162,17 +205,17 @@ module Ruby2Faust
     # FILTERS (fi.)
     # =========================================================================
 
-    def lp(freq, order: 1)
+    def lp(freq = wire, order: 1)
       freq = to_dsp(freq)
       DSP.new(Node.new(type: NodeType::LP, args: [order], inputs: [freq.node]))
     end
 
-    def hp(freq, order: 1)
+    def hp(freq = wire, order: 1)
       freq = to_dsp(freq)
       DSP.new(Node.new(type: NodeType::HP, args: [order], inputs: [freq.node]))
     end
 
-    def bp(freq, q: 1)
+    def bp(freq = wire, q: 1)
       freq = to_dsp(freq)
       q = to_dsp(q)
       DSP.new(Node.new(type: NodeType::BP, inputs: [freq.node, q.node]))
@@ -568,17 +611,20 @@ module Ruby2Faust
       DSP.new(Node.new(type: NodeType::CHECKBOX, args: [name]))
     end
 
-    def hgroup(name, content)
+    def hgroup(name, content = nil, &block)
+      content = block.call if block_given?
       content = to_dsp(content)
       DSP.new(Node.new(type: NodeType::HGROUP, args: [name], inputs: [content.node], channels: content.node.channels))
     end
 
-    def vgroup(name, content)
+    def vgroup(name, content = nil, &block)
+      content = block.call if block_given?
       content = to_dsp(content)
       DSP.new(Node.new(type: NodeType::VGROUP, args: [name], inputs: [content.node], channels: content.node.channels))
     end
 
-    def tgroup(name, content)
+    def tgroup(name, content = nil, &block)
+      content = block.call if block_given?
       content = to_dsp(content)
       DSP.new(Node.new(type: NodeType::TGROUP, args: [name], inputs: [content.node], channels: content.node.channels))
     end
@@ -620,10 +666,15 @@ module Ruby2Faust
   class Program
     attr_reader :process, :declarations, :imports
 
-    def initialize(process)
-      @process = process
+    def initialize(process = nil, &block)
       @declarations = {}
       @imports = ["stdfaust.lib"]
+      if block_given?
+        extend DSL
+        @process = instance_eval(&block)
+      else
+        @process = process
+      end
     end
 
     def declare(key, value)
@@ -635,5 +686,39 @@ module Ruby2Faust
       @imports << lib unless @imports.include?(lib)
       self
     end
+  end
+end
+
+# Numeric extensions for audio conversions
+# These return DSP nodes that can be used in signal chains
+class Numeric
+  # MIDI note number to Hz
+  # 60.midi => ba.midikey2hz(60)
+  def midi
+    Ruby2Faust::DSL.midi2hz(self)
+  end
+
+  # dB to linear gain
+  # -6.db => ba.db2linear(-6)
+  def db
+    Ruby2Faust::DSL.db2linear(self)
+  end
+
+  # Seconds to samples
+  # 0.1.sec => ba.sec2samp(0.1)
+  def sec
+    Ruby2Faust::DSL.sec2samp(self)
+  end
+
+  # Milliseconds to samples
+  # 100.ms => ba.sec2samp(0.1)
+  def ms
+    Ruby2Faust::DSL.sec2samp(self / 1000.0)
+  end
+
+  # Hz (pass-through for clarity)
+  # 440.hz => 440
+  def hz
+    Ruby2Faust::DSL.literal(self.to_s)
   end
 end

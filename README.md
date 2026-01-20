@@ -18,18 +18,24 @@ gem 'ruby2faust'
 
 ```ruby
 require 'ruby2faust'
-include Ruby2Faust::DSL
 
-# Use >> for signal flow (alias for .then)
-process = osc(440) >> lp(800) >> gain(0.3)
-puts Ruby2Faust::Emitter.program(process)
+# Idiomatic Ruby style
+code = Ruby2Faust.generate do
+  # Use numeric extensions: .midi, .hz, .db
+  freq = 60.midi >> smoo
+  
+  # Arithmetic operators for signal mixing
+  (osc(freq) + noise) * -6.db
+end
+
+puts code
 ```
 
 Output:
 ```faust
 import("stdfaust.lib");
 
-process = ((os.osc(440) : fi.lowpass(1, 800)) : *(0.3));
+process = ((os.osc(ba.midikey2hz(60)) + no.noise) * ba.db2linear(-6));
 ```
 
 ## Composition
@@ -38,33 +44,54 @@ Ruby2Faust maps Faust's composition operators to Ruby methods and operators:
 
 ```ruby
 # Sequential: signal flows through a chain
-osc(440) >> lp(800) >> gain(0.3)       # Faust: osc : lp : gain
+osc(440) >> lp(800) >> gain(0.3)      
 
-# Gain shorthand with *
-osc(440) * 0.3                          # Faust: osc : *(0.3)
-saw(freq) * env * 0.5                   # Chain multiple gains
+# Arithmetic operators (Infix)
+osc(440) + noise                        # Mix / Sum
+osc(440) * 0.3                          # Gain
+osc(440) - osc(442)                     # Subtraction
+-osc(440)                               # Negate
 
 # Parallel: signals run side by side
-osc(440) | osc(442)                     # Faust: osc, osc (stereo)
+osc(440) | osc(442)                     # Stereo
 
-# Split (fan-out): one signal to many
-osc(440).split(gain(0.5) | gain(0.3))  # Faust: osc <: (gain, gain)
+# Split (fan-out)
+osc(440).split(gain(0.5) | gain(0.3))
 
-# Merge (fan-in): many signals to one
-(osc(440) | noise).merge(add)          # Faust: (osc, noise) :> +
-
-# Feedback: signal loops back
-wire ~ (delay(44100, 22050) * 0.5)     # Faust: _ ~ (delay : *(0.5))
+# Feedback loop
+wire ~ (delay(44100, 22050) * 0.5)
 ```
 
-| Faust | Meaning | Method | Operator |
-|-------|---------|--------|----------|
-| `:` | Sequential | `.then(b)` | `>>` |
-| `*(x)` | Gain | `gain(x)` | `* x` |
-| `,` | Parallel | `.par(b)` | `\|` |
-| `<:` | Fan-out | `.split(*bs)` | n/a |
-| `:>` | Fan-in | `.merge(b)` | n/a |
-| `~` | Feedback | `.feedback(b)` | `~` |
+| Faust | Meaning | Ruby Oper | Method |
+|-------|---------|-----------|--------|
+| `:` | Sequential | `>>` | `.then` |
+| `+` | Add / Mix | `+` | n/a |
+| `-` | Subtract | `-` | n/a |
+| `*(x)` | Gain | `* x` | `gain(x)` |
+| `,` | Parallel | `\|` | `.par` |
+| `<:` | Fan-out | n/a | `.split` |
+| `:>` | Fan-in | n/a | `.merge` |
+| `~` | Feedback | `~` | `.feedback` |
+
+## Ruby-isms
+
+### Numeric Extensions
+Convenient conversions for common audio units:
+```ruby
+60.midi   # ba.midikey2hz(60)
+-6.db     # ba.db2linear(-6)
+0.1.sec   # ba.sec2samp(0.1)
+10.ms     # ba.sec2samp(0.01)
+440.hz    # 440
+```
+
+### Block UI Groups
+```ruby
+hgroup("Master") {
+  vgroup("Osc") { osc(freq) } | 
+  vgroup("FX") { reverb }
+}
+```
 
 ## DSL Reference
 
