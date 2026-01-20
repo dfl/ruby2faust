@@ -325,6 +325,14 @@ ruby2faust compile -o out.dsp synth.rb
 ruby2faust run synth.rb               # Compile + run Faust
 ```
 
+## faust2ruby
+
+The reverse converter is also included: convert Faust DSP code to Ruby DSL. See [faust2ruby.md](faust2ruby.md) for details.
+
+```bash
+faust2ruby input.dsp -o output.rb
+```
+
 ## Live Reload
 
 ```ruby
