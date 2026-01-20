@@ -1,0 +1,129 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "optparse"
+require_relative "../lib/ruby2faust"
+
+module Ruby2Faust
+  class CLI
+    def initialize(args)
+      @args = args
+      @options = { target: :cpp }
+    end
+
+    def run
+      command = @args.shift
+
+      case command
+      when "compile", "c"
+        compile_command
+      when "run", "r"
+        run_command
+      when "version", "-v", "--version"
+        puts "ruby2faust #{VERSION}"
+      when "help", "-h", "--help", nil
+        print_help
+      else
+        puts "Unknown command: #{command}"
+        print_help
+        exit 1
+      end
+    end
+
+    private
+
+    def compile_command
+      parser = OptionParser.new do |opts|
+        opts.banner = "Usage: ruby2faust compile [options] <file.rb>"
+
+        opts.on("-o", "--output FILE", "Output .dsp file") do |f|
+          @options[:output] = f
+        end
+
+        opts.on("-t", "--target TARGET", [:cpp, :wasm, :llvm], "Compilation target (cpp, wasm, llvm)") do |t|
+          @options[:target] = t
+        end
+      end
+      parser.parse!(@args)
+
+      input_file = @args.shift
+      unless input_file
+        puts "Error: No input file specified"
+        puts parser.help
+        exit 1
+      end
+
+      unless File.exist?(input_file)
+        puts "Error: File not found: #{input_file}"
+        exit 1
+      end
+
+      output_file = @options[:output] || input_file.sub(/\.rb$/, ".dsp")
+
+      # Load and evaluate the Ruby DSL file
+      dsl_code = File.read(input_file)
+      context = Object.new
+      context.extend(DSL)
+      process = context.instance_eval(dsl_code, input_file)
+
+      # Generate Faust code
+      faust_code = Emitter.program(process)
+      File.write(output_file, faust_code)
+
+      puts "Generated: #{output_file}"
+    end
+
+    def run_command
+      parser = OptionParser.new do |opts|
+        opts.banner = "Usage: ruby2faust run [options] <file.rb>"
+
+        opts.on("-t", "--target TARGET", [:cpp, :wasm], "Run target (cpp, wasm)") do |t|
+          @options[:target] = t
+        end
+      end
+      parser.parse!(@args)
+
+      input_file = @args.shift
+      unless input_file
+        puts "Error: No input file specified"
+        puts parser.help
+        exit 1
+      end
+
+      # First compile to .dsp
+      @options[:output] = nil
+      @args.unshift(input_file)
+      compile_command
+
+      # Then run Faust compiler
+      dsp_file = input_file.sub(/\.rb$/, ".dsp")
+      puts "Compiling with Faust..."
+      Live.faust_compile(dsp_file, target: @options[:target])
+    end
+
+    def print_help
+      puts <<~HELP
+        ruby2faust - A Ruby DSL for generating Faust DSP code
+
+        Usage:
+          ruby2faust <command> [options] [arguments]
+
+        Commands:
+          compile, c    Compile a Ruby DSL file to Faust .dsp
+          run, r        Compile to .dsp and run Faust compiler
+          version       Show version
+          help          Show this help
+
+        Examples:
+          ruby2faust compile synth.rb
+          ruby2faust compile -o output.dsp synth.rb
+          ruby2faust run --target wasm synth.rb
+
+        For command-specific help:
+          ruby2faust compile --help
+      HELP
+    end
+  end
+end
+
+Ruby2Faust::CLI.new(ARGV).run
