@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
 
   spec.files = Dir.glob("{lib,bin}/**/*") + %w[README.md LICENSE.txt]
   spec.bindir = "bin"
-  spec.executables = ["ruby2faust"]
+  spec.executables = ["ruby2faust", "faust2ruby"]
   spec.require_paths = ["lib"]
 
   spec.add_development_dependency "minitest", "~> 5.0"
