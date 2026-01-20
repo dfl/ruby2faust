@@ -101,6 +101,11 @@ module Ruby2Faust
     SEC2SAMP  = :sec2samp   # ba.sec2samp
     MIDI2HZ   = :midi2hz    # ba.midikey2hz
     HZ2MIDI   = :hz2midi    # ba.hz2midikey
+    TAU2POLE  = :tau2pole   # ba.tau2pole
+    POLE2TAU  = :pole2tau   # ba.pole2tau
+    BA_IF     = :ba_if      # ba.if(cond, then, else)
+    SELECTOR  = :selector   # ba.selector(n, sel, inputs)
+    BA_TAKE   = :ba_take    # ba.take(idx, tuple)
 
     # === Smoothing (si.) ===
     SMOOTH    = :smooth     # si.smooth(ba.tau2pole(tau))

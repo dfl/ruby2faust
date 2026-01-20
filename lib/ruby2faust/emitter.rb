@@ -182,6 +182,24 @@ module Ruby2Faust
         "ba.midikey2hz(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
       when NodeType::HZ2MIDI
         "ba.hz2midikey(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
+      when NodeType::TAU2POLE
+        "ba.tau2pole(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
+      when NodeType::POLE2TAU
+        "ba.pole2tau(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
+      when NodeType::BA_IF
+        cond = emit(node.inputs[0], indent: indent, pretty: pretty)
+        then_val = emit(node.inputs[1], indent: indent, pretty: pretty)
+        else_val = emit(node.inputs[2], indent: indent, pretty: pretty)
+        "ba.if(#{cond}, #{then_val}, #{else_val})"
+      when NodeType::SELECTOR
+        n = node.args[0]
+        sel = emit(node.inputs[0], indent: indent, pretty: pretty)
+        inputs = node.inputs[1..].map { |i| emit(i, indent: indent, pretty: pretty) }.join(", ")
+        "ba.selector(#{n}, #{sel}, #{inputs})"
+      when NodeType::BA_TAKE
+        idx = emit(node.inputs[0], indent: indent, pretty: pretty)
+        tuple = emit(node.inputs[1], indent: indent, pretty: pretty)
+        "ba.take(#{idx}, #{tuple})"
 
       # === SMOOTHING ===
       when NodeType::SMOOTH

@@ -483,6 +483,35 @@ module Ruby2Faust
       DSP.new(Node.new(type: NodeType::HZ2MIDI, inputs: [x.node]))
     end
 
+    def tau2pole(tau)
+      tau = to_dsp(tau)
+      DSP.new(Node.new(type: NodeType::TAU2POLE, inputs: [tau.node]))
+    end
+
+    def pole2tau(pole)
+      pole = to_dsp(pole)
+      DSP.new(Node.new(type: NodeType::POLE2TAU, inputs: [pole.node]))
+    end
+
+    def ba_if(cond, then_val, else_val)
+      cond = to_dsp(cond)
+      then_val = to_dsp(then_val)
+      else_val = to_dsp(else_val)
+      DSP.new(Node.new(type: NodeType::BA_IF, inputs: [cond.node, then_val.node, else_val.node]))
+    end
+
+    def selector(n, sel, *inputs)
+      sel = to_dsp(sel)
+      inputs = inputs.map { |i| to_dsp(i) }
+      DSP.new(Node.new(type: NodeType::SELECTOR, args: [n], inputs: [sel.node] + inputs.map(&:node)))
+    end
+
+    def ba_take(idx, tuple)
+      idx = to_dsp(idx)
+      tuple = to_dsp(tuple)
+      DSP.new(Node.new(type: NodeType::BA_TAKE, inputs: [idx.node, tuple.node]))
+    end
+
     # =========================================================================
     # SMOOTHING (si.)
     # =========================================================================

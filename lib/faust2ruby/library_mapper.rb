@@ -52,6 +52,13 @@ module Faust2Ruby
       "ba.midikey2hz" => { dsl: :midi2hz, args: 1 },
       "ba.hz2midikey" => { dsl: :hz2midi, args: 1 },
       "ba.selectn" => { dsl: :selectn, args: :variadic },
+      "ba.tau2pole" => { dsl: :tau2pole, args: 1 },
+      "ba.pole2tau" => { dsl: :pole2tau, args: 1 },
+      "ba.if" => { dsl: :ba_if, args: 3 },
+      "ba.selector" => { dsl: :selector, args: 3 },
+      "ba.selectmulti" => { dsl: :selectmulti, args: :variadic },
+      "ba.count" => { dsl: :ba_count, args: :variadic },
+      "ba.take" => { dsl: :ba_take, args: 2 },
 
       # Smoothing (si.)
       "si.smooth" => { dsl: :smooth, args: 1 },
