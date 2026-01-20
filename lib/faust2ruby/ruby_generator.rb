@@ -402,15 +402,7 @@ module Faust2Ruby
       else
         # Standard call - check for partial application
         expected_args = mapping[:args]
-        if expected_args == 0 && args.length > 0
-          # 0-arg processor called with args means sequencing: tanh(x) => (x >> tanh_)
-          if args.length == 1
-            "(#{args[0]} >> #{dsl_method})"
-          else
-            # Multiple args - parallel then sequence
-            "(#{args.join(' | ')} >> #{dsl_method})"
-          end
-        elsif expected_args.is_a?(Integer) && args.length < expected_args && args.length > 0
+        if expected_args.is_a?(Integer) && args.length < expected_args && args.length > 0
           # Partial application - generate flambda for remaining args
           missing = expected_args - args.length
           if missing == 1
