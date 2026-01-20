@@ -425,21 +425,25 @@ The variable pattern `(n)` becomes the default/else case, and integer patterns a
 
 ### Pattern Matching on Function Arguments
 
-Multi-rule function definitions with pattern matching are **not supported**:
+Multi-rule function definitions with single-parameter pattern matching are now supported:
 
+**Input (Faust):**
 ```faust
-// Multiple definitions with different argument patterns
 fact(0) = 1;
-fact(n) = n * fact(n-1);
-
-// Will fail to parse - only the last definition is kept
+fact(n) = n * fact(n - 1);
 ```
 
-**Workarounds:**
-- Use `case` expressions instead: `fact = case { (0) => 1; (n) => n * fact(n-1); };`
-- Use `select2` or `ba.if` for conditionals
-- Rewrite recursive patterns using iteration where possible
-- Keep pattern matching code in Faust and import it
+**Output (Ruby):**
+```ruby
+fact = flambda(:n) { |n| select2(n.eq(0), (n * fact((n - 1))), 1) }
+```
+
+Multiple definitions with the same name are automatically merged into a case expression, then converted to `select2` chains.
+
+**Limitations:**
+- Only single-parameter pattern matching is supported
+- Multi-parameter patterns (e.g., `foo(0, 0) = a; foo(x, y) = b;`) are not merged
+- Recursive functions like factorial require compile-time evaluation (the Ruby output is syntactically correct but may not produce the same runtime behavior)
 
 ## Known Issues
 

@@ -17,8 +17,11 @@ module Faust2Ruby
     def generate(program)
       lines = []
 
+      # Merge multi-rule functions into case expressions
+      merged_statements = merge_multirule_functions(program.statements)
+
       # Collect definitions for reference
-      program.statements.each do |stmt|
+      merged_statements.each do |stmt|
         @definitions[stmt.name] = stmt if stmt.is_a?(AST::Definition)
       end
 
@@ -39,7 +42,7 @@ module Faust2Ruby
         lines << "" if declares.any?
 
         # Generate helper definitions (excluding process)
-        program.statements.each do |stmt|
+        merged_statements.each do |stmt|
           if stmt.is_a?(AST::Definition) && stmt.name != "process"
             lines << generate_definition(stmt)
             lines << ""
@@ -150,6 +153,64 @@ module Faust2Ruby
     end
 
     private
+
+    # Merge multi-rule function definitions into case expressions
+    # e.g., fact(0) = 1; fact(n) = n * fact(n-1);
+    # becomes: fact = case { (0) => 1; (n) => n * fact(n-1); }
+    def merge_multirule_functions(statements)
+      # Group definitions by name
+      definition_groups = {}
+      other_statements = []
+
+      statements.each do |stmt|
+        if stmt.is_a?(AST::Definition)
+          (definition_groups[stmt.name] ||= []) << stmt
+        else
+          other_statements << stmt
+        end
+      end
+
+      # Process each group
+      merged_definitions = []
+      definition_groups.each do |name, defs|
+        if defs.length == 1
+          # Single definition - keep as-is
+          merged_definitions << defs[0]
+        elsif defs.all? { |d| d.params.length == 1 }
+          # Multiple definitions with single param each - merge into case
+          # This handles patterns like fact(0) = 1; fact(n) = n * fact(n-1);
+          merged_definitions << merge_to_case(name, defs)
+        else
+          # Multiple definitions but not simple pattern matching
+          # Keep the last one (original behavior) with a warning comment
+          merged_definitions << defs.last
+        end
+      end
+
+      # Reconstruct statement order: imports, declares, definitions
+      other_statements + merged_definitions
+    end
+
+    # Merge multiple definitions into a single definition with a case expression
+    def merge_to_case(name, defs)
+      branches = defs.map do |defn|
+        # The param becomes the pattern
+        param = defn.params[0]
+
+        # Check if param looks like an integer literal pattern
+        # In Faust, fact(0) means param is literally "0"
+        pattern = if param =~ /^\d+$/
+                    AST::IntLiteral.new(param.to_i, line: defn.line, column: defn.column)
+                  else
+                    AST::Identifier.new(param, line: defn.line, column: defn.column)
+                  end
+
+        AST::CaseBranch.new(pattern, defn.expression, line: defn.line, column: defn.column)
+      end
+
+      case_expr = AST::CaseExpr.new(branches, line: defs[0].line, column: defs[0].column)
+      AST::Definition.new(name, case_expr, params: [], line: defs[0].line, column: defs[0].column)
+    end
 
     # Check if a node is a numeric literal that needs wrapping for composition
     def numeric_literal?(node)

@@ -209,4 +209,51 @@ class Faust2Ruby::GeneratorTest < Minitest::Test
     assert_equal "(1 + 2)", result
     refute_includes result, "num("
   end
+
+  def test_generate_case_with_default
+    result = generate("process = case { (0) => 1; (n) => n * 2; };")
+    assert_includes result, "flambda(:n)"
+    assert_includes result, "select2"
+    assert_includes result, "n.eq(0)"
+  end
+
+  def test_generate_case_multiple_branches
+    result = generate("process = case { (0) => a; (1) => b; (2) => c; };")
+    assert_includes result, "flambda(:x)"
+    # Should have nested select2 calls
+    assert_includes result, "select2(x.eq(0)"
+    assert_includes result, "select2(x.eq(1)"
+  end
+
+  def test_generate_case_only_variable_pattern
+    # When only variable pattern, falls back to literal
+    result = generate("process = case { (n) => n * n; };")
+    assert_includes result, "literal("
+  end
+
+  def test_generate_case_variable_becomes_default
+    result = generate("process = case { (0) => 10; (x) => x; };")
+    # The 'x' variable should be used in the flambda
+    assert_includes result, "flambda(:x)"
+    # Default case should be 'x' (the variable)
+    assert_includes result, "select2(x.eq(0), x, 10)"
+  end
+
+  def test_generate_multirule_function
+    # Multi-rule functions like fact(0) = 1; fact(n) = n * ... should merge
+    source = "fact(0) = 1; fact(n) = n * 2; process = fact(5);"
+    result = Faust2Ruby.to_ruby(source)
+    # Should generate a flambda with select2
+    assert_includes result, "fact = flambda(:n)"
+    assert_includes result, "select2(n.eq(0)"
+    assert_includes result, "process = fact(5)"
+  end
+
+  def test_generate_multirule_preserves_order
+    # Integer patterns should be checked in definition order
+    source = "foo(0) = a; foo(1) = b; foo(n) = c; process = foo(x);"
+    result = Faust2Ruby.to_ruby(source)
+    assert_includes result, "select2(n.eq(0)"
+    assert_includes result, "select2(n.eq(1)"
+  end
 end

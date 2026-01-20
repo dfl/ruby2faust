@@ -220,4 +220,43 @@ class Faust2Ruby::ParserTest < Minitest::Test
     parser.parse
     refute_empty parser.errors
   end
+
+  def test_parse_case_expression
+    program = parse("process = case { (0) => 1; (n) => n * 2; };")
+    stmt = program.statements[0]
+    assert_instance_of Faust2Ruby::AST::CaseExpr, stmt.expression
+    assert_equal 2, stmt.expression.branches.length
+  end
+
+  def test_parse_case_branch_patterns
+    program = parse("process = case { (0) => a; (1) => b; (x) => c; };")
+    stmt = program.statements[0]
+    branches = stmt.expression.branches
+
+    # First branch: integer pattern
+    assert_instance_of Faust2Ruby::AST::IntLiteral, branches[0].pattern
+    assert_equal 0, branches[0].pattern.value
+
+    # Second branch: integer pattern
+    assert_instance_of Faust2Ruby::AST::IntLiteral, branches[1].pattern
+    assert_equal 1, branches[1].pattern.value
+
+    # Third branch: variable pattern
+    assert_instance_of Faust2Ruby::AST::Identifier, branches[2].pattern
+    assert_equal "x", branches[2].pattern.name
+  end
+
+  def test_parse_case_with_complex_results
+    program = parse("process = case { (0) => a + b; (n) => n * n; };")
+    stmt = program.statements[0]
+    branches = stmt.expression.branches
+
+    # First result is binary op
+    assert_instance_of Faust2Ruby::AST::BinaryOp, branches[0].result
+    assert_equal :ADD, branches[0].result.op
+
+    # Second result is binary op
+    assert_instance_of Faust2Ruby::AST::BinaryOp, branches[1].result
+    assert_equal :MUL, branches[1].result.op
+  end
 end

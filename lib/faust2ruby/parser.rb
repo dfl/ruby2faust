@@ -134,13 +134,21 @@ module Faust2Ruby
       name_token = advance  # consume identifier or process keyword
       name = name_token.type == :PROCESS ? "process" : name_token.value
 
-      # Check for parameters: name(x, y) = ...
+      # Check for parameters: name(x, y) = ... or name(0) = ... (pattern matching)
       params = []
       if current_type == :LPAREN
         advance  # consume (
         until current_type == :RPAREN || current_type == :EOF
-          param_token = expect(:IDENT)
-          params << param_token.value if param_token
+          # Accept both identifiers and integer literals (for pattern matching)
+          if current_type == :IDENT
+            params << advance.value
+          elsif current_type == :INT
+            # Integer pattern - store as string so merge_to_case can detect it
+            params << advance.value.to_s
+          else
+            error("Expected identifier or integer pattern")
+            break
+          end
           break unless current_type == :PAR
           advance  # consume ,
         end
