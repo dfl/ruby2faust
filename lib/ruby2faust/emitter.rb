@@ -590,9 +590,9 @@ module Ruby2Faust
       context = Object.new
       context.extend(DSL)
       # The block receives a symbolic representation of the iterator
-      iter_param = context.param(var)
+      iter_param = DSL.param(var)
       body = block.call(iter_param)
-      body = context.instance_exec(body) { |b| to_dsp(b) }
+      body = DSL.send(:to_dsp, body)
       emit(body.node, indent: indent, pretty: pretty)
     end
   end

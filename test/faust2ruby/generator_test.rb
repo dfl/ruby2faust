@@ -94,18 +94,20 @@ class Faust2Ruby::GeneratorTest < Minitest::Test
 
   def test_generate_par_iteration
     result = generate("process = par(i, 4, osc(i));")
-    assert_includes result, "fpar(:i, 4)"
+    assert_includes result, "fpar(4)"
     assert_includes result, "|i|"
   end
 
   def test_generate_seq_iteration
     result = generate("process = seq(i, 3, gain(0.5));")
-    assert_includes result, "fseq(:i, 3)"
+    assert_includes result, "fseq(3)"
+    assert_includes result, "|i|"
   end
 
   def test_generate_sum_iteration
     result = generate("process = sum(i, 4, osc(i));")
-    assert_includes result, "fsum(:i, 4)"
+    assert_includes result, "fsum(4)"
+    assert_includes result, "|i|"
   end
 
   def test_generate_lambda

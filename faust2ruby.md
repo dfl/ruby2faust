@@ -140,7 +140,7 @@ process = par(i, 4, os.osc(i * 100));
 
 **Output (Ruby):**
 ```ruby
-fpar(:i, 4) { |i| osc((i * 100)) }
+fpar(4) { |i| osc((i * 100)) }
 ```
 
 ## Supported Faust Constructs
@@ -224,10 +224,10 @@ Note: `bor()` is a method because `\|` is used for parallel composition in the D
 
 | Faust | Ruby |
 |-------|------|
-| `par(i, n, e)` | `fpar(:i, n) { \|i\| e }` |
-| `seq(i, n, e)` | `fseq(:i, n) { \|i\| e }` |
-| `sum(i, n, e)` | `fsum(:i, n) { \|i\| e }` |
-| `prod(i, n, e)` | `fprod(:i, n) { \|i\| e }` |
+| `par(i, n, e)` | `fpar(n) { \|i\| e }` |
+| `seq(i, n, e)` | `fseq(n) { \|i\| e }` |
+| `sum(i, n, e)` | `fsum(n) { \|i\| e }` |
+| `prod(i, n, e)` | `fprod(n) { \|i\| e }` |
 
 ### Tables
 

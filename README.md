@@ -182,10 +182,13 @@ selectn(n, index, *signals)  # N-way select
 ### Iteration
 Ruby blocks map to Faust's iteration constructs:
 ```ruby
-fpar(:i, 4) { |i| osc((i + 1) * 100) }    # par(i, 4, osc((i+1)*100)) - 4 parallel oscillators
-fseq(:i, 3) { |i| lp(1000 * (i + 1)) }    # seq(i, 3, fi.lowpass(1, 1000*(i+1))) - cascaded filters
-fsum(:i, 4) { |i| osc((i + 1) * 100) }    # sum(i, 4, osc((i+1)*100)) - sum of 4 oscillators
-fprod(:i, 3) { |i| osc((i + 1) * 100) }   # prod(i, 3, osc((i+1)*100)) - ring modulation
+fpar(4) { |i| osc((i + 1) * 100) }    # par(i, 4, osc((i+1)*100)) - 4 parallel oscillators
+fseq(3) { |i| lp(1000 * (i + 1)) }    # seq(i, 3, fi.lowpass(1, 1000*(i+1))) - cascaded filters
+fsum(4) { |i| osc((i + 1) * 100) }    # sum(i, 4, osc((i+1)*100)) - sum of 4 oscillators
+fprod(3) { |i| osc((i + 1) * 100) }   # prod(i, 3, osc((i+1)*100)) - ring modulation
+
+# Ruby 3.4+ implicit 'it' parameter also works:
+fpar(4) { osc((it + 1) * 100) }       # par(it, 4, osc((it+1)*100))
 ```
 
 ### Lambda

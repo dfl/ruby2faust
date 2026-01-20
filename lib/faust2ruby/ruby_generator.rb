@@ -544,7 +544,7 @@ module Faust2Ruby
                when :prod then "fprod"
                end
 
-      "#{method}(:#{var}, #{count}) { |#{var}| #{body} }"
+      "#{method}(#{count}) { |#{var}| #{body} }"
     end
 
     def generate_lambda(node)

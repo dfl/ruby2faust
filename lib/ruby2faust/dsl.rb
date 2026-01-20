@@ -933,42 +933,44 @@ module Ruby2Faust
     # =========================================================================
 
     # Parallel iteration: par(i, n, expr)
-    # @param var [Symbol] Iterator variable name
     # @param count [Integer] Number of iterations
-    # @yield [Integer] Block receiving iteration index
+    # @yield [DSP] Block receiving iteration index as DSP param
+    # @example fpar(4) { |i| osc(i * 100) }
+    # @example fpar(4) { osc(it * 100) }  # Ruby 3.4+ implicit it
     # @return [DSP]
-    def fpar(var, count, &block)
+    def fpar(count, &block)
       raise ArgumentError, "fpar requires a block" unless block_given?
+      var = block.parameters.first&.last || :it
       DSP.new(Node.new(type: NodeType::FPAR, args: [var, count, block], channels: count))
     end
 
     # Sequential iteration: seq(i, n, expr)
-    # @param var [Symbol] Iterator variable name
     # @param count [Integer] Number of iterations
-    # @yield [Integer] Block receiving iteration index
+    # @yield [DSP] Block receiving iteration index as DSP param
     # @return [DSP]
-    def fseq(var, count, &block)
+    def fseq(count, &block)
       raise ArgumentError, "fseq requires a block" unless block_given?
+      var = block.parameters.first&.last || :it
       DSP.new(Node.new(type: NodeType::FSEQ, args: [var, count, block]))
     end
 
     # Summation iteration: sum(i, n, expr)
-    # @param var [Symbol] Iterator variable name
     # @param count [Integer] Number of iterations
-    # @yield [Integer] Block receiving iteration index
+    # @yield [DSP] Block receiving iteration index as DSP param
     # @return [DSP]
-    def fsum(var, count, &block)
+    def fsum(count, &block)
       raise ArgumentError, "fsum requires a block" unless block_given?
+      var = block.parameters.first&.last || :it
       DSP.new(Node.new(type: NodeType::FSUM, args: [var, count, block]))
     end
 
     # Product iteration: prod(i, n, expr)
-    # @param var [Symbol] Iterator variable name
     # @param count [Integer] Number of iterations
-    # @yield [Integer] Block receiving iteration index
+    # @yield [DSP] Block receiving iteration index as DSP param
     # @return [DSP]
-    def fprod(var, count, &block)
+    def fprod(count, &block)
       raise ArgumentError, "fprod requires a block" unless block_given?
+      var = block.parameters.first&.last || :it
       DSP.new(Node.new(type: NodeType::FPROD, args: [var, count, block]))
     end
 
