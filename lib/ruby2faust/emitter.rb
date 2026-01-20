@@ -233,6 +233,16 @@ module Ruby2Faust
         "tan"
       when NodeType::TANH
         "ma.tanh"
+      when NodeType::SINH
+        "sinh"
+      when NodeType::COSH
+        "cosh"
+      when NodeType::ASINH
+        "asinh"
+      when NodeType::ACOSH
+        "acosh"
+      when NodeType::ATANH
+        "atanh"
       when NodeType::ASIN
         "asin"
       when NodeType::ACOS

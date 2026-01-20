@@ -656,6 +656,26 @@ module Ruby2Faust
       DSP.new(Node.new(type: NodeType::TANH))
     end
 
+    def sinh_
+      DSP.new(Node.new(type: NodeType::SINH))
+    end
+
+    def cosh_
+      DSP.new(Node.new(type: NodeType::COSH))
+    end
+
+    def asinh_
+      DSP.new(Node.new(type: NodeType::ASINH))
+    end
+
+    def acosh_
+      DSP.new(Node.new(type: NodeType::ACOSH))
+    end
+
+    def atanh_
+      DSP.new(Node.new(type: NodeType::ATANH))
+    end
+
     def asin_
       DSP.new(Node.new(type: NodeType::ASIN))
     end

@@ -120,6 +120,11 @@ module Ruby2Faust
     ATAN = :atan
     ATAN2 = :atan2
     TANH = :tanh       # ma.tanh - saturating
+    SINH = :sinh
+    COSH = :cosh
+    ASINH = :asinh
+    ACOSH = :acosh
+    ATANH = :atanh
     FLOOR = :floor
     CEIL = :ceil
     RINT = :rint       # round to int
