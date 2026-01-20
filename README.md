@@ -62,7 +62,7 @@ osc(440).split(gain(0.5) | gain(0.3))
 wire ~ (delay(44100, 22050) * 0.5)
 ```
 
-| Faust | Meaning | Ruby Oper | Method |
+| Faust | Meaning | Ruby | Method |
 |-------|---------|-----------|--------|
 | `:` | Sequential | `>>` | `.then` |
 | `+` | Add / Mix | `+` | n/a |
