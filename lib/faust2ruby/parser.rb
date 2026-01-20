@@ -148,8 +148,50 @@ module Faust2Ruby
 
       expect(:DEF)
       expr = parse_expression
+
+      # Handle 'with' clause: expr with { definitions }
+      if current_type == :WITH
+        expr = parse_with_clause(expr)
+      end
+
       expect(:ENDDEF)
       AST::Definition.new(name, expr, params: params, line: token.line, column: token.column)
+    end
+
+    def parse_with_clause(expr)
+      token = advance  # consume 'with'
+      expect(:LBRACE)
+      definitions = []
+      until current_type == :RBRACE || current_type == :EOF
+        if current_type == :IDENT
+          def_token = current
+          name = advance.value
+          # Check for parameters
+          params = []
+          if current_type == :LPAREN
+            advance
+            until current_type == :RPAREN || current_type == :EOF
+              param_token = expect(:IDENT)
+              params << param_token.value if param_token
+              break unless current_type == :PAR
+              advance
+            end
+            expect(:RPAREN)
+          end
+          expect(:DEF)
+          def_expr = parse_expression
+          # Handle nested with
+          if current_type == :WITH
+            def_expr = parse_with_clause(def_expr)
+          end
+          expect(:ENDDEF)
+          definitions << AST::Definition.new(name, def_expr, params: params, line: def_token.line, column: def_token.column)
+        else
+          break
+        end
+      end
+      expect(:RBRACE)
+      AST::With.new(expr, definitions, line: token.line, column: token.column)
     end
 
     def parse_expression(min_prec = 0)
