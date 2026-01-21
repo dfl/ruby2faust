@@ -34,9 +34,10 @@ Ruby2Faust maps Faust's composition operators to Ruby methods and operators:
 # Sequential: signal flows through a chain
 osc(440) >> lp(800) >> gain(0.3)      
 
-# Arithmetic operators (Infix)
+# Arithmetic operators (Infix) - work with numeric on either side
 osc(440) + noise                        # Mix / Sum
 osc(440) * 0.3                          # Gain
+0.3 * osc(440)                          # Gain (numeric on left)
 osc(440) - osc(442)                     # Subtraction
 -osc(440)                               # Negate
 

@@ -72,6 +72,14 @@ module Ruby2Faust
       "#<Ruby2Faust::DSP #{to_s}>"
     end
 
+    # Enable numeric-on-left operations like: 0.3 * osc(440)
+    # Ruby calls coerce when left operand doesn't know how to handle right operand
+    # @param other [Numeric]
+    # @return [Array<DSP, DSP>]
+    def coerce(other)
+      [DSL.to_dsp(other), self]
+    end
+
     # Add / mix signals (Faust +)
     # @param other [Numeric, DSP, Symbol]
     # @return [DSP]

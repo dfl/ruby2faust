@@ -11,13 +11,25 @@ class RubyismTest < Minitest::Test
     expr = osc(440) + noise
     assert_equal "(os.osc(440) + no.noise)", Ruby2Faust::Emitter.emit(expr.node)
 
+    # Test + with numeric on left (via coerce)
+    expr = 1 + osc(440)
+    assert_equal "(1 + os.osc(440))", Ruby2Faust::Emitter.emit(expr.node)
+
     # Test - (sub)
     expr = osc(440) - osc(442)
     assert_equal "(os.osc(440) - os.osc(442))", Ruby2Faust::Emitter.emit(expr.node)
 
+    # Test - with numeric on left (via coerce)
+    expr = 1 - osc(440)
+    assert_equal "(1 - os.osc(440))", Ruby2Faust::Emitter.emit(expr.node)
+
     # Test * (mul/gain)
     expr = osc(440) * 0.5
     assert_equal "(os.osc(440) * 0.5)", Ruby2Faust::Emitter.emit(expr.node)
+
+    # Test * with numeric on left (via coerce)
+    expr = 0.5 * osc(440)
+    assert_equal "(0.5 * os.osc(440))", Ruby2Faust::Emitter.emit(expr.node)
 
     # Test / (div)
     expr = osc(440) / 2

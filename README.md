@@ -30,12 +30,13 @@ gem 'frausto'
 require 'ruby2faust'
 
 code = Ruby2Faust.generate do
-  osc(440) >> lp(800) >> gain(0.3)
+  freq = 60.midi >> smoo
+  (osc(freq) + noise * 0.1) >> lp(2000) * -6.db
 end
 
 puts code
 # => import("stdfaust.lib");
-#    process = (os.osc(440) : fi.lowpass(1, 800) : *(0.3));
+#    process = ((os.osc((ba.midikey2hz(60) : si.smoo)) + (no.noise * 0.1)) : fi.lowpass(1, 2000) : *(ba.db2linear(-6)));
 ```
 
 ```ruby
