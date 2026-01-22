@@ -44,7 +44,7 @@ module Ruby2Faust
       my_prec < parent_prec ? "(#{expr})" : expr
     end
 
-    def program(process, imports: nil, declarations: {}, pretty: false)
+    def program(process, imports: nil, declarations: {}, pretty: false, output: "process")
       if process.is_a?(Program)
         node = process.process.is_a?(DSP) ? process.process.node : process.process
         imports ||= process.imports
@@ -59,9 +59,9 @@ module Ruby2Faust
       lines << "" if declarations.any?
       imports.each { |lib| lines << "import(\"#{lib}\");" }
       lines << ""
-      
+
       body = emit(node, pretty: pretty, prec: 0)
-      lines << "process = #{body};"
+      lines << "#{output} = #{body};"
       lines.join("\n") + "\n"
     end
 

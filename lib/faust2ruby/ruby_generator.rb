@@ -29,6 +29,9 @@ module Faust2Ruby
       imports = program.statements.select { |s| s.is_a?(AST::Import) }.map(&:path)
       declares = program.statements.select { |s| s.is_a?(AST::Declare) }
 
+      # Standard Faust output names
+      output_names = %w[process effect]
+
       unless @expression_only
         lines << "require 'ruby2faust'"
         lines << "include Ruby2Faust::DSL"
@@ -41,26 +44,28 @@ module Faust2Ruby
 
         lines << "" if declares.any?
 
-        # Generate helper definitions (excluding process)
+        # Generate helper definitions (excluding outputs)
         merged_statements.each do |stmt|
-          if stmt.is_a?(AST::Definition) && stmt.name != "process"
+          if stmt.is_a?(AST::Definition) && !output_names.include?(stmt.name)
             lines << generate_definition(stmt)
             lines << ""
           end
         end
       end
 
-      # Generate process
-      process_def = @definitions["process"]
-      if process_def
+      # Find the main output (process or effect)
+      output_name = output_names.find { |name| @definitions[name] }
+      output_def = @definitions[output_name] if output_name
+
+      if output_def
         if @expression_only
-          lines << generate_expression(process_def.expression)
+          lines << generate_expression(output_def.expression)
         else
-          lines << "process = #{generate_expression(process_def.expression)}"
+          lines << "#{output_name} = #{generate_expression(output_def.expression)}"
           lines << ""
 
           # Build program with imports and declares
-          lines << "prog = Ruby2Faust::Program.new(process)"
+          lines << "prog = Ruby2Faust::Program.new(#{output_name})"
           imports.each do |imp|
             lines << "  .import(#{imp.inspect})" unless imp == "stdfaust.lib"
           end
@@ -68,7 +73,7 @@ module Faust2Ruby
             lines << "  .declare(:#{d.key}, #{d.value.inspect})"
           end
           lines << ""
-          lines << "puts Ruby2Faust::Emitter.program(prog)"
+          lines << "puts Ruby2Faust::Emitter.program(prog, output: #{output_name.inspect})"
         end
       end
 

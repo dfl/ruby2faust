@@ -16,12 +16,17 @@ module Ruby2Faust
   #     osc(440).then(gain(0.3))
   #   end
   #
+  # @example Generate an effect instead of process
+  #   code = Ruby2Faust.generate(output: "effect") do
+  #     wire >> delay(48000, 0.5.sec) * 0.5
+  #   end
+  #
   # @yield Block that returns a DSP
   # @return [String] Faust source code
-  def self.generate(pretty: true, &block)
+  def self.generate(pretty: true, output: "process", &block)
     context = Object.new
     context.extend(DSL)
-    process = context.instance_eval(&block)
-    Emitter.program(process, pretty: pretty)
+    result = context.instance_eval(&block)
+    Emitter.program(result, pretty: pretty, output: output)
   end
 end
