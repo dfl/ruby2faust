@@ -146,14 +146,20 @@ floor_, ceil_, rint_
 ```
 
 ### Conversion (ba.)
+
+With argument (wrapping):
 ```ruby
-db2linear(x)   # dB to linear
-linear2db(x)   # Linear to dB
-midi2hz(x)     # MIDI note to Hz
-hz2midi(x)     # Hz to MIDI note
-samp2sec(x)    # Samples to seconds
-sec2samp(x)    # Seconds to samples
+db2linear(-6)  # ba.db2linear(-6)
+midi2hz(60)    # ba.midikey2hz(60)
 ```
+
+Without argument (chainable):
+```ruby
+hslider("amp", ...) >> db2linear >> smoo   # hslider(...) : ba.db2linear : si.smoo
+hslider("freq", ...) >> midi2hz >> smoo    # hslider(...) : ba.midikey2hz : si.smoo
+```
+
+All conversion functions: `db2linear`, `linear2db`, `midi2hz`, `hz2midi`, `samp2sec`, `sec2samp`
 
 ### Smoothing (si.)
 ```ruby
