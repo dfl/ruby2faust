@@ -6,13 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - `fcase` DSL method for pattern-matching case expressions
-- Ruby: `fcase(0 => 1, 1 => 2) { |n| n * 2 }`
-- Faust: `case { (0) => 1; (1) => 2; (n) => n : *(2); }`
+- Chainable conversion functions: `db2linear`, `midi2hz`, `hz2midi`, `linear2db`, `sec2samp`, `samp2sec`
+  - Example: `hslider("amp", ...) >> db2linear >> smoo`
 
 ### Changed
 - `pretty: true` is now the default for `Ruby2Faust.generate`
 - faust2ruby emits `fcase` instead of verbose `flambda`/`select2` chains
-- Simplified `with` clause documentation example
+- README example now shows MIDI and dB conversion with smoothed sliders
 
 ## [0.2.3] - 2025-01-21
 

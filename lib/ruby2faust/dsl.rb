@@ -732,34 +732,60 @@ module Ruby2Faust
     # CONVERSION (ba.)
     # =========================================================================
 
-    def db2linear(x)
-      x = to_dsp(x)
-      DSP.new(Node.new(type: NodeType::DB2LINEAR, inputs: [x.node]))
+    def db2linear(x = nil)
+      if x.nil?
+        DSP.new(Node.new(type: NodeType::DB2LINEAR, inputs: []))
+      else
+        x = to_dsp(x)
+        DSP.new(Node.new(type: NodeType::DB2LINEAR, inputs: [x.node]))
+      end
+    end
+    alias db2lin db2linear
+
+    def linear2db(x = nil)
+      if x.nil?
+        DSP.new(Node.new(type: NodeType::LINEAR2DB, inputs: []))
+      else
+        x = to_dsp(x)
+        DSP.new(Node.new(type: NodeType::LINEAR2DB, inputs: [x.node]))
+      end
+    end
+    alias lin2db linear2db
+
+    def samp2sec(x = nil)
+      if x.nil?
+        DSP.new(Node.new(type: NodeType::SAMP2SEC, inputs: []))
+      else
+        x = to_dsp(x)
+        DSP.new(Node.new(type: NodeType::SAMP2SEC, inputs: [x.node]))
+      end
     end
 
-    def linear2db(x)
-      x = to_dsp(x)
-      DSP.new(Node.new(type: NodeType::LINEAR2DB, inputs: [x.node]))
+    def sec2samp(x = nil)
+      if x.nil?
+        DSP.new(Node.new(type: NodeType::SEC2SAMP, inputs: []))
+      else
+        x = to_dsp(x)
+        DSP.new(Node.new(type: NodeType::SEC2SAMP, inputs: [x.node]))
+      end
     end
 
-    def samp2sec(x)
-      x = to_dsp(x)
-      DSP.new(Node.new(type: NodeType::SAMP2SEC, inputs: [x.node]))
+    def midi2hz(x = nil)
+      if x.nil?
+        DSP.new(Node.new(type: NodeType::MIDI2HZ, inputs: []))
+      else
+        x = to_dsp(x)
+        DSP.new(Node.new(type: NodeType::MIDI2HZ, inputs: [x.node]))
+      end
     end
 
-    def sec2samp(x)
-      x = to_dsp(x)
-      DSP.new(Node.new(type: NodeType::SEC2SAMP, inputs: [x.node]))
-    end
-
-    def midi2hz(x)
-      x = to_dsp(x)
-      DSP.new(Node.new(type: NodeType::MIDI2HZ, inputs: [x.node]))
-    end
-
-    def hz2midi(x)
-      x = to_dsp(x)
-      DSP.new(Node.new(type: NodeType::HZ2MIDI, inputs: [x.node]))
+    def hz2midi(x = nil)
+      if x.nil?
+        DSP.new(Node.new(type: NodeType::HZ2MIDI, inputs: []))
+      else
+        x = to_dsp(x)
+        DSP.new(Node.new(type: NodeType::HZ2MIDI, inputs: [x.node]))
+      end
     end
 
     def tau2pole(tau)

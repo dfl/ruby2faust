@@ -352,17 +352,17 @@ module Ruby2Faust
 
       # === CONVERSION ===
       when NodeType::DB2LINEAR
-        "ba.db2linear(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
+        node.inputs.empty? ? "ba.db2linear" : "ba.db2linear(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
       when NodeType::LINEAR2DB
-        "ba.linear2db(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
+        node.inputs.empty? ? "ba.linear2db" : "ba.linear2db(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
       when NodeType::SAMP2SEC
-        "ba.samp2sec(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
+        node.inputs.empty? ? "ba.samp2sec" : "ba.samp2sec(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
       when NodeType::SEC2SAMP
-        "ba.sec2samp(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
+        node.inputs.empty? ? "ba.sec2samp" : "ba.sec2samp(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
       when NodeType::MIDI2HZ
-        "ba.midikey2hz(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
+        node.inputs.empty? ? "ba.midikey2hz" : "ba.midikey2hz(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
       when NodeType::HZ2MIDI
-        "ba.hz2midikey(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
+        node.inputs.empty? ? "ba.hz2midikey" : "ba.hz2midikey(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
       when NodeType::TAU2POLE
         "ba.tau2pole(#{emit(node.inputs[0], indent: indent, pretty: pretty)})"
       when NodeType::POLE2TAU
